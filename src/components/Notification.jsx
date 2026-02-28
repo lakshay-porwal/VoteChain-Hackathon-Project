@@ -3,7 +3,7 @@ import { CheckCircle, AlertCircle, X, Info } from 'lucide-react';
 import { useWeb3 } from '../App';
 
 const Notification = () => {
-    const { notifications, setNotifications } = useWeb3();
+    const { notifications } = useWeb3();
 
     // If setNotifications is not exposed in context, we might need to adjust App.jsx or just read.
     // In App.jsx I exposed `notifications` and `addNotification`. I didn't expose `setNotifications` directly but `addNotification` handles removal.

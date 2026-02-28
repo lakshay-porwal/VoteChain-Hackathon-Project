@@ -3,7 +3,7 @@ import { Plus, Calendar, Clock, BarChart3, Trash2, Check, ExternalLink, RefreshC
 import { useWeb3 } from '../App';
 
 const AdminDashboard = () => {
-    const { contract, account, addNotification, loading: web3Loading, ethers } = useWeb3();
+    const { contract, addNotification } = useWeb3();
     const [elections, setElections] = useState([]);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('active'); // active, upcoming, past, trash
@@ -57,6 +57,7 @@ const AdminDashboard = () => {
         fetchElections();
         const interval = setInterval(() => fetchElections(false), 10000);
         return () => clearInterval(interval);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [contract]);
 
     const handleCreateElection = async (e) => {
@@ -276,8 +277,6 @@ const AdminDashboard = () => {
                                     value={formData.allowedVoters}
                                     onChange={e => setFormData({ ...formData, allowedVoters: e.target.value })}
                                 />
-                                onChange={e => setFormData({ ...formData, allowedVoters: e.target.value })}
-                                />
                                 <p className="text-xs text-gray-500 mt-1">Separate addresses with commas. You can add more later.</p>
                             </div>
                         )}
@@ -338,7 +337,6 @@ const AdminDashboard = () => {
                             const now = Date.now();
                             const isLive = now >= election.startTime && now <= election.endTime;
                             const isEnded = now > election.endTime;
-                            const isUpcoming = now < election.startTime;
 
                             return (
                                 <div key={election.id} className="bg-gray-800/30 border border-gray-700 p-6 rounded-xl hover:border-gray-600 transition-colors">

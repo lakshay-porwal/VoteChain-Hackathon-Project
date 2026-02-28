@@ -6,15 +6,13 @@ const VoterDashboard = () => {
     const { contract, account, addNotification } = useWeb3();
     const [activeTab, setActiveTab] = useState('active'); // active, closed, upcoming
     const [elections, setElections] = useState([]);
-    const [loading, setLoading] = useState(false);
     const [selectedElection, setSelectedElection] = useState(null); // For voting modal
     const [candidates, setCandidates] = useState([]);
     const [announcements, setAnnouncements] = useState([]);
 
-    const fetchElections = async (isLoaderNeeded = true) => {
+    const fetchElections = async () => {
         if (!contract) return;
         try {
-            if (isLoaderNeeded) setLoading(true);
             const count = await contract.getElectionCount();
             const fetchedElections = [];
             const countNum = Number(count);
@@ -43,7 +41,6 @@ const VoterDashboard = () => {
                     startTime: Number(details.startTime) * 1000,
                     endTime: Number(details.endTime) * 1000,
                     isResultsPublished: details.isResultsPublished,
-                    isResultsPublished: details.isResultsPublished,
                     isPrivate: details.isPrivate,
                     isDeleted: details.isDeleted,
                     totalVotes: Number(details.totalVotes),
@@ -67,8 +64,6 @@ const VoterDashboard = () => {
 
         } catch (error) {
             console.error(error);
-        } finally {
-            if (isLoaderNeeded) setLoading(false);
         }
     };
 
@@ -95,6 +90,7 @@ const VoterDashboard = () => {
         fetchElections();
         const interval = setInterval(() => fetchElections(false), 10000);
         return () => clearInterval(interval);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [contract, account]);
 
     const handleOpenVote = async (election) => {
