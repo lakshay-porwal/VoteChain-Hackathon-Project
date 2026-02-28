@@ -1,12 +1,101 @@
-# VoteChain
+# 🗳️ VoteChain – Decentralized Voting System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+VoteChain is a blockchain-based decentralized voting platform designed to ensure **security, transparency, and immutability** in the voting process.  
+It uses **Ethereum smart contracts** for tamper-proof vote recording and a **React + Vite frontend** for a fast and modern user experience.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Features
 
-## Expanding the ESLint configuration
+- 🔐 Decentralized voting using Ethereum blockchain
+- 🧾 Immutable on-chain vote storage
+- ⚡ Fast frontend with React and Vite
+- 🔄 Optimized gas usage in smart contracts
+- 🌐 Web3 integration for blockchain interaction
+- 📊 Transparent and verifiable voting results
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+- React
+- Vite
+- JavaScript
+- HTML
+- CSS
+
+### Blockchain
+- Solidity
+- Ethereum
+- Hardhat
+- Web3.js
+
+### Tools
+- Node.js
+- npm
+- ESLint
+
+---
+
+## 📂 Project Structure
+VoteChain/
+│── src/
+│ ├── components/
+│ ├── pages/
+│ ├── App.jsx
+│ └── main.jsx
+│
+│── public/
+│── contracts/
+│── scripts/
+│── test/
+│── package.json
+│── vite.config.js
+└── README.md
+
+
+---
+
+## ⚙️ Getting Started
+
+### Prerequisites
+
+- Node.js (v16 or higher)
+- npm
+- MetaMask wallet (for blockchain interaction)
+
+---
+
+### 🔧 Installation
+
+1. Clone the repository: git clone https://github.com/lakshay-porwal/VoteChain-Hackathon-Project.git
+2. Navigate to the project directory:cd VoteChain
+3. Install dependencies: npm install
+4. Start the development server: npm run dev
+
+
+---
+
+## 📈 Future Enhancements
+
+- Role-based access (Admin / Voter)
+- Wallet-based voter authentication
+- Live election result dashboard
+- Support for multiple elections
+- IPFS integration for decentralized storage
+
+---
+
+## 👨‍💻 Author
+
+**Lakshay Porwal**
+
+- GitHub: https://github.com/lakshay-porwal  
+- LinkedIn: https://www.linkedin.com/in/lakshay-porwal  
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License**.
