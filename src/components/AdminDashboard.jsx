@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Calendar, Clock, BarChart3, Trash2, Check, ExternalLink, RefreshCw, Send, Lock, Unlock, Users, Pause, Play, ShieldAlert } from 'lucide-react';
+import { Plus, Calendar, Clock, BarChart3, Trash2, Check, ExternalLink, RefreshCw, Send, Lock, Unlock } from 'lucide-react';
 import { useWeb3 } from '../App';
 
 const AdminDashboard = () => {
-    const { contract, addNotification, isSuperAdmin } = useWeb3();
+    const { contract, addNotification } = useWeb3();
     const [elections, setElections] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [activeTab, setActiveTab] = useState('active'); // active, upcoming, past, requests, trash
-
-    // Tracking multi-admin form
-    const [newAdmin, setNewAdmin] = useState('');
+    const [activeTab, setActiveTab] = useState('active'); // active, upcoming, past, trash
 
     // Form State
     const [formData, setFormData] = useState({
@@ -22,10 +19,6 @@ const AdminDashboard = () => {
     });
 
     const [announcementMsg, setAnnouncementMsg] = useState('');
-    const [announcementGroup, setAnnouncementGroup] = useState(0); // 0=All, 1=Admins, 2=Voted, 3=Unvoted
-
-    // Voter Requests state
-    const [voterRequests, setVoterRequests] = useState([]);
 
     const fetchElections = async (isLoaderNeeded = true) => {
         if (!contract) return;
@@ -34,12 +27,10 @@ const AdminDashboard = () => {
             const count = await contract.getElectionCount();
             const fetchedElections = [];
             const countNum = Number(count);
-            let requestedVoters = [];
 
             // Loop latest 10 elections or all
-            for (let i = countNum; i >= 1; i--) { // Fetching all to find requests
+            for (let i = countNum; i >= 1 && i > countNum - 10; i--) {
                 const details = await contract.getElectionDetails(i);
-                
                 fetchedElections.push({
                     id: Number(details.id),
                     name: details.name,
@@ -50,24 +41,10 @@ const AdminDashboard = () => {
                     isPrivate: details.isPrivate,
                     isDeleted: details.isDeleted,
                     totalVotes: Number(details.totalVotes),
-                    candidateCount: Number(details.candidateCount),
-                    isPaused: details.isPaused
+                    candidateCount: Number(details.candidateCount)
                 });
-
-                // Fetch voter requests if private and not deleted
-                if (details.isPrivate && !details.isDeleted) {
-                    const reqs = await contract.getVoterRequests(Number(details.id));
-                    reqs.forEach(req => {
-                        requestedVoters.push({
-                            electionId: Number(details.id),
-                            electionName: details.name,
-                            voterAddress: req
-                        });
-                    });
-                }
             }
             setElections(fetchedElections);
-            setVoterRequests(requestedVoters);
         } catch (error) {
             console.error(error);
             if (isLoaderNeeded) addNotification("Failed to load elections", "error");
@@ -178,7 +155,6 @@ const AdminDashboard = () => {
     const filteredElections = elections.filter(e => {
         const now = Date.now();
         if (activeTab === 'trash') return e.isDeleted;
-        if (activeTab === 'requests') return false; // Show none in this view, we handle mapping manually
         if (e.isDeleted) return false; // Don't show deleted in other tabs
 
         if (activeTab === 'active') return now >= e.startTime && now <= e.endTime;
@@ -192,7 +168,7 @@ const AdminDashboard = () => {
         if (!announcementMsg.trim()) return;
 
         try {
-            const tx = await contract.addAnnouncement(announcementMsg, announcementGroup);
+            const tx = await contract.addAnnouncement(announcementMsg);
             addNotification("Sending announcement...", "info");
             await tx.wait();
             addNotification("Announcement Sent!", "success");
@@ -200,75 +176,6 @@ const AdminDashboard = () => {
         } catch (error) {
             console.error(error);
             addNotification("Failed to send announcement", "error");
-        }
-    };
-
-    const handleApproveRequest = async (electionId, voterAddr) => {
-        try {
-            const tx = await contract.approveVoterRequest(electionId, voterAddr);
-            addNotification("Approving voter...", "info");
-            await tx.wait();
-            addNotification("Voter Approved!", "success");
-            fetchElections(false);
-        } catch (error) {
-            console.error(error);
-            addNotification("Failed to approve voter", "error");
-        }
-    };
-
-    const handleAddAdmin = async () => {
-        if (!newAdmin) return;
-        try {
-            const tx = await contract.addAdmin(newAdmin);
-            addNotification("Adding admin...", "info");
-            await tx.wait();
-            addNotification("Admin Added!", "success");
-            setNewAdmin('');
-        } catch (error) {
-            console.error(error);
-            addNotification("Failed to add admin", "error");
-        }
-    };
-
-    const handleRemoveAdmin = async () => {
-        if (!newAdmin) return;
-        try {
-            const tx = await contract.removeAdmin(newAdmin);
-            addNotification("Removing admin...", "info");
-            await tx.wait();
-            addNotification("Admin Removed!", "success");
-            setNewAdmin('');
-        } catch (error) {
-            console.error(error);
-            addNotification("Failed to remove admin", "error");
-        }
-    };
-
-    const handlePauseResume = async (electionId, isPaused) => {
-        try {
-            const tx = isPaused ? await contract.resumeElection(electionId) : await contract.pauseElection(electionId);
-            addNotification(isPaused ? "Resuming election..." : "Pausing election...", "info");
-            await tx.wait();
-            addNotification(isPaused ? "Election Resumed!" : "Election Paused!", "success");
-            fetchElections(false);
-        } catch (error) {
-            console.error(error);
-            addNotification("Failed to toggle pause status", "error");
-        }
-    };
-
-    const handleAddCandidate = async (electionId) => {
-        const name = prompt("Enter new candidate's name:");
-        if (!name) return;
-        try {
-            const tx = await contract.addCandidate(electionId, name);
-            addNotification("Adding candidate...", "info");
-            await tx.wait();
-            addNotification("Candidate added!", "success");
-            fetchElections(false);
-        } catch (error) {
-            console.error(error);
-            addNotification("Failed to add candidate. Ensure election is upcoming and < 1000 candidates exist.", "error");
         }
     };
 
@@ -284,61 +191,20 @@ const AdminDashboard = () => {
                 </div>
             </header>
 
-            {/* Super Admin Section */}
-            {isSuperAdmin && (
-                <div className="bg-purple-900/20 border border-purple-800/50 p-6 rounded-2xl backdrop-blur-sm">
-                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                        <ShieldAlert className="w-5 h-5 text-purple-400" />
-                        Super Admin Access: Manage Admins
-                    </h2>
-                    <div className="flex gap-4 max-w-xl">
-                        <input
-                            type="text"
-                            className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none focus:ring-2 focus:ring-purple-500 text-sm font-mono"
-                            placeholder="Enter Wallet Address..."
-                            value={newAdmin}
-                            onChange={(e) => setNewAdmin(e.target.value)}
-                        />
-                        <button
-                            onClick={handleAddAdmin}
-                            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                        >
-                            Add
-                        </button>
-                        <button
-                            onClick={handleRemoveAdmin}
-                            className="bg-red-900 hover:bg-red-800 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                        >
-                            Remove
-                        </button>
-                    </div>
-                </div>
-            )}
-
             {/* Announcement Section */}
             <div className="bg-blue-900/20 border border-blue-800/50 p-6 rounded-2xl backdrop-blur-sm">
                 <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                     <Send className="w-5 h-5 text-blue-400" />
-                    Targeted Announcements
+                    Make Announcement
                 </h2>
-                <div className="flex gap-4 items-center">
+                <div className="flex gap-4">
                     <input
                         type="text"
                         className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Type a message..."
+                        placeholder="Type a message to all voters..."
                         value={announcementMsg}
                         onChange={(e) => setAnnouncementMsg(e.target.value)}
                     />
-                    <select 
-                        value={announcementGroup}
-                        onChange={(e) => setAnnouncementGroup(Number(e.target.value))}
-                        className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        <option value={0}>All Users</option>
-                        <option value={1}>Admins Only</option>
-                        <option value={2}>Voted Users</option>
-                        <option value={3}>Unvoted Users</option>
-                    </select>
                     <button
                         onClick={handleMakeAnnouncement}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
@@ -446,45 +312,21 @@ const AdminDashboard = () => {
 
                     {/* Tabs */}
                     <div className="flex space-x-2 bg-gray-800/50 p-1 rounded-lg w-fit mb-4">
-                        {['active', 'upcoming', 'past', 'requests', 'trash'].map(tab => (
+                        {['active', 'upcoming', 'past', 'trash'].map(tab => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
                                 className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === tab
                                     ? 'bg-blue-600 text-white shadow'
                                     : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                                    } ${tab === 'requests' && voterRequests.length > 0 && activeTab !== tab ? 'animate-pulse text-yellow-400 bg-yellow-400/10' : ''}`}
+                                    }`}
                             >
-                                {tab === 'requests' ? `Requests (${voterRequests.length})` : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                {tab.charAt(0).toUpperCase() + tab.slice(1)}
                             </button>
                         ))}
                     </div>
 
-                    {activeTab === 'requests' ? (
-                        <div className="space-y-4">
-                            {voterRequests.length === 0 ? (
-                                <div className="text-center py-12 text-gray-500 bg-gray-800/20 rounded-xl border border-dashed border-gray-700">
-                                    No pending voter requests.
-                                </div>
-                            ) : (
-                                voterRequests.map((req, idx) => (
-                                    <div key={idx} className="bg-gray-800/30 border border-gray-700 p-4 rounded-xl flex items-center justify-between">
-                                        <div>
-                                            <div className="text-sm text-gray-400">Request for Private Election:</div>
-                                            <div className="text-lg font-bold text-white">{req.electionName}</div>
-                                            <div className="text-xs font-mono text-gray-500 mt-1">{req.voterAddress}</div>
-                                        </div>
-                                        <button 
-                                            onClick={() => handleApproveRequest(req.electionId, req.voterAddress)}
-                                            className="px-4 py-2 bg-green-600/20 border border-green-500/30 text-green-400 rounded-lg hover:bg-green-600 hover:text-white transition-all text-sm font-medium"
-                                        >
-                                            Approve
-                                        </button>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    ) : loading && elections.length === 0 ? (
+                    {loading && elections.length === 0 ? (
                         <div className="text-center py-12 text-gray-500">Loading elections...</div>
                     ) : filteredElections.length === 0 ? (
                         <div className="text-center py-12 text-gray-500 bg-gray-800/20 rounded-xl border border-dashed border-gray-700">
@@ -509,12 +351,11 @@ const AdminDashboard = () => {
                                         </div>
                                         <div className={`px-3 py-1 rounded-full text-xs font-semibold
                                             ${election.isDeleted ? 'bg-gray-700 text-gray-400 border border-gray-600' :
-                                                election.isPaused ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
                                                 isLive ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
                                                     isEnded ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
                                                         'bg-blue-500/20 text-blue-400 border border-blue-500/30'}
                                         `}>
-                                            {election.isDeleted ? 'DELETED' : election.isPaused ? 'PAUSED' : isLive ? 'LIVE' : isEnded ? 'CLOSED' : 'UPCOMING'}
+                                            {election.isDeleted ? 'DELETED' : isLive ? 'LIVE' : isEnded ? 'CLOSED' : 'UPCOMING'}
                                         </div>
                                     </div>
 
@@ -559,18 +400,10 @@ const AdminDashboard = () => {
                                                         Extend
                                                     </button>
                                                 </>
-                                            ) : isLive ? (
-                                                <div className="flex flex-1 gap-2">
-                                                    <button onClick={() => handlePauseResume(election.id, election.isPaused)} className={`flex-1 ${election.isPaused ? 'bg-green-900/30 text-green-400 border-green-500/30 hover:bg-green-800' : 'bg-yellow-900/30 text-yellow-400 border-yellow-500/30 hover:bg-yellow-800'} border text-xs font-medium py-2 px-3 rounded-lg flex items-center justify-center gap-1 transition-all`}>
-                                                        {election.isPaused ? <><Play className="w-3 h-3" /> Resume</> : <><Pause className="w-3 h-3" /> Pause</>}
-                                                    </button>
-                                                </div>
                                             ) : (
-                                                <div className="flex flex-1 gap-2">
-                                                    <button onClick={() => handleAddCandidate(election.id)} className="flex-1 bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600/40 text-xs font-medium py-2 px-3 rounded-lg flex items-center justify-center gap-1 transition-all">
-                                                        <Plus className="w-3 h-3" /> Add Candidate
-                                                    </button>
-                                                </div>
+                                                <button disabled className="flex-1 bg-gray-700 text-gray-400 text-xs font-medium py-2 px-3 rounded-lg cursor-not-allowed">
+                                                    Voting in Progress
+                                                </button>
                                             )}
 
                                             <button

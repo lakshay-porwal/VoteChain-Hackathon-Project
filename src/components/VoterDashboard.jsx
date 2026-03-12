@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Vote, Clock, Crown, CheckCircle, Lock, Bell, Pause, Receipt, FileText } from 'lucide-react';
+import { Vote, Clock, Crown, CheckCircle, Lock, Bell } from 'lucide-react';
 import { useWeb3 } from '../App';
 
 const VoterDashboard = () => {
-    const { contract, account, isAdmin, isSuperAdmin, addNotification } = useWeb3();
+    const { contract, account, addNotification } = useWeb3();
     const [activeTab, setActiveTab] = useState('active'); // active, closed, upcoming
     const [elections, setElections] = useState([]);
     const [selectedElection, setSelectedElection] = useState(null); // For voting modal
     const [candidates, setCandidates] = useState([]);
     const [announcements, setAnnouncements] = useState([]);
-    const [receiptModal, setReceiptModal] = useState({ isOpen: false, data: null });
 
     const fetchElections = async () => {
         if (!contract) return;
@@ -31,14 +30,8 @@ const VoterDashboard = () => {
                 }
 
                 let hasVoted = false;
-                let requestPending = false;
                 if (account) {
                     hasVoted = await contract.checkUserVoted(i, account);
-                    if (details.isPrivate && !isEligible) {
-                        try {
-                            requestPending = await contract.voterRequests(i, account);
-                        } catch(e) {}
-                    }
                 }
 
                 fetchedElections.push({
@@ -51,10 +44,8 @@ const VoterDashboard = () => {
                     isPrivate: details.isPrivate,
                     isDeleted: details.isDeleted,
                     totalVotes: Number(details.totalVotes),
-                    isPaused: details.isPaused,
                     hasVoted,
-                    isEligible,
-                    requestPending
+                    isEligible
                 });
             }
             setElections(fetchedElections);
@@ -62,27 +53,12 @@ const VoterDashboard = () => {
             // Fetch Announcements
             if (contract.getAnnouncements) {
                 const announcementsData = await contract.getAnnouncements();
-                
-                const userHasVoted = fetchedElections.some(e => e.hasVoted);
-                const userIsAdminRole = isAdmin || isSuperAdmin;
-
-                const formattedAnnouncements = announcementsData
-                    .map(a => ({
-                        id: Number(a.id),
-                        message: a.message,
-                        timestamp: Number(a.timestamp) * 1000,
-                        targetGroup: Number(a.targetGroup)
-                    }))
-                    .filter(a => {
-                        // 0=All, 1=Admins, 2=Voted, 3=Unvoted
-                        if (a.targetGroup === 0) return true;
-                        if (a.targetGroup === 1 && userIsAdminRole) return true;
-                        if (a.targetGroup === 2 && userHasVoted) return true;
-                        if (a.targetGroup === 3 && !userHasVoted) return true;
-                        return false;
-                    })
-                    .reverse(); // Newest first
-
+                // announcementsData is array of structs
+                const formattedAnnouncements = announcementsData.map(a => ({
+                    id: Number(a.id),
+                    message: a.message,
+                    timestamp: Number(a.timestamp) * 1000
+                })).reverse(); // Newest first
                 setAnnouncements(formattedAnnouncements);
             }
 
@@ -118,44 +94,12 @@ const VoterDashboard = () => {
     }, [contract, account]);
 
     const handleOpenVote = async (election) => {
-        if (election.isPaused) {
-            addNotification("This election is currently paused by admin.", "warning");
-            return;
-        }
         if (election.isPrivate && !election.isEligible) {
             addNotification("You are not authorized to vote in this private election.", "error");
             return;
         }
         setSelectedElection(election);
         await fetchCandidates(election.id);
-    };
-
-    const handleRequestToVote = async (electionId) => {
-        if (!confirm("Send request to admin to participate in this private election?")) return;
-        try {
-            const tx = await contract.requestToVote(electionId);
-            addNotification("Sending request...", "info");
-            await tx.wait();
-            addNotification("Request Sent to Admin!", "success");
-            fetchElections();
-        } catch (error) {
-            console.error(error);
-            addNotification("Failed to send request. You might have already requested.", "error");
-        }
-    };
-
-    const handleViewReceipt = async (electionId, electionName) => {
-        try {
-            const receiptHash = await contract.getVoteReceipt(electionId, account);
-            if (receiptHash === "0x0000000000000000000000000000000000000000000000000000000000000000") {
-                addNotification("No valid receipt found for this election.", "warning");
-                return;
-            }
-            setReceiptModal({ isOpen: true, data: { electionName, hash: receiptHash } });
-        } catch (error) {
-            console.error(error);
-            addNotification("Failed to fetch receipt.", "error");
-        }
     };
 
     const handleVote = async (candidateId) => {
@@ -264,61 +208,30 @@ const VoterDashboard = () => {
                                 <div className="flex items-center justify-between">
                                     <span>Your Status</span>
                                     {election.hasVoted ? (
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-green-400 flex items-center gap-1">
-                                                <CheckCircle className="w-3 h-3" /> Voted
-                                            </span>
-                                        </div>
-                                    ) : election.requestPending ? (
-                                        <span className="text-yellow-400">Request Pending</span>
+                                        <span className="text-green-400 flex items-center gap-1">
+                                            <CheckCircle className="w-3 h-3" /> Voted
+                                        </span>
                                     ) : (
-                                        <span className="text-gray-400">Not Voted</span>
+                                        <span className="text-yellow-400">Not Voted</span>
                                     )}
                                 </div>
                             </div>
 
-                            {election.hasVoted && (
-                                <button 
-                                    onClick={() => handleViewReceipt(election.id, election.name)}
-                                    className="w-full mb-3 py-2 border border-blue-500/30 text-blue-400 hover:bg-blue-600/10 rounded-lg text-sm transition-all flex items-center justify-center gap-2"
-                                >
-                                    <Receipt className="w-4 h-4" /> View Vote Receipt
-                                </button>
-                            )}
-
-                            {activeTab === 'active' && election.isPrivate && !election.isEligible && !election.hasVoted ? (
-                                <button
-                                    onClick={() => handleRequestToVote(election.id)}
-                                    disabled={election.requestPending}
-                                    className={`w-full py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2
-                                        ${election.requestPending 
-                                            ? 'bg-gray-700 text-gray-400 cursor-not-allowed opacity-70' 
-                                            : 'bg-yellow-600 hover:bg-yellow-700 text-white shadow-lg shadow-yellow-900/20'
-                                        }`}
-                                >
-                                    <Lock className="w-4 h-4" /> {election.requestPending ? 'Request Pending' : 'Request to Vote'}
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={() => handleOpenVote(election)}
-                                    disabled={(activeTab !== 'active' && activeTab !== 'closed') || (election.isPrivate && !election.isEligible) || election.isPaused}
-                                    className={`w-full py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2
-                                        ${election.isPaused 
-                                            ? 'bg-yellow-900/40 text-yellow-500 cursor-not-allowed border border-yellow-700/50'
-                                            : activeTab === 'active' && (!election.isPrivate || election.isEligible)
-                                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:opacity-90 shadow-lg shadow-blue-900/20'
-                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600 cursor-not-allowed opacity-70'
-                                        }
-                                    `}
-                                >
-                                    {election.isPaused ? (
-                                        <><Pause className="w-4 h-4" /> Voting Paused</>
-                                    ) : election.isPrivate && !election.isEligible ? (
-                                        <><Lock className="w-4 h-4" /> Not Authorized</>
-                                    ) : activeTab === 'active' ? (election.hasVoted ? 'View Choices' : 'Vote Now') :
-                                        activeTab === 'closed' ? 'View Results' : 'Wait for Start'}
-                                </button>
-                            )}
+                            <button
+                                onClick={() => handleOpenVote(election)}
+                                disabled={(activeTab !== 'active' && activeTab !== 'closed') || (election.isPrivate && !election.isEligible)}
+                                className={`w-full py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2
+                                    ${activeTab === 'active' && (!election.isPrivate || election.isEligible)
+                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:opacity-90 shadow-lg shadow-blue-900/20'
+                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600 cursor-not-allowed opacity-70'
+                                    }
+                                `}
+                            >
+                                {election.isPrivate && !election.isEligible ? (
+                                    <><Lock className="w-4 h-4" /> Not Authorized</>
+                                ) : activeTab === 'active' ? (election.hasVoted ? 'View Choices' : 'Vote Now') :
+                                    activeTab === 'closed' ? 'View Results' : 'Wait for Start'}
+                            </button>
                         </div>
                     ))
                 )}
@@ -406,40 +319,6 @@ const VoterDashboard = () => {
                                     </div>
                                 </div>
                             )}
-                        </div>
-                    </div>
-                </div>
-            )}
-            {/* Receipt Modal */}
-            {receiptModal.isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <div className="bg-[#1e293b] w-full max-w-md rounded-2xl border border-gray-700 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="p-6 border-b border-gray-700 flex justify-between items-center bg-gray-800/50">
-                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                <FileText className="w-5 h-5 text-blue-400" />
-                                Official Vote Receipt
-                            </h2>
-                            <button onClick={() => setReceiptModal({ isOpen: false, data: null })} className="text-gray-400 hover:text-white">
-                                <span className="sr-only">Close</span>
-                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
-                        </div>
-                        <div className="p-6">
-                            <p className="text-sm text-gray-400 mb-4">
-                                This cryptographic hash proves that your vote was successfully recorded for <strong>{receiptModal.data.electionName}</strong>. 
-                                It is securely stored on the blockchain and cannot be altered.
-                            </p>
-                            <div className="bg-gray-900 border border-gray-700 p-4 rounded-xl break-all font-mono text-green-400 text-sm">
-                                {receiptModal.data.hash}
-                            </div>
-                            <div className="mt-6 flex justify-end">
-                                <button
-                                    onClick={() => setReceiptModal({ isOpen: false, data: null })}
-                                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                                >
-                                    Close
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </div>
