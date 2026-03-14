@@ -10,7 +10,26 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: function (origin, callback) {
+        // Allow requests with no origin (mobile apps, curl, Postman, Vite proxy)
+        if (!origin) return callback(null, true);
+        const allowed = [
+            'http://localhost:5173',
+            'http://127.0.0.1:5173',
+            'http://localhost:4173', // vite preview
+            'https://votechain-hackathon-project-ymy1.onrender.com',
+        ];
+        // Also allow any *.onrender.com or *.vercel.app or *.netlify.app domain
+        if (
+            allowed.includes(origin) ||
+            /\.onrender\.com$/.test(origin) ||
+            /\.vercel\.app$/.test(origin) ||
+            /\.netlify\.app$/.test(origin)
+        ) {
+            return callback(null, true);
+        }
+        return callback(null, true); // Permissive for hackathon — lock down for production
+    },
     credentials: true
 }));
 // Set higher limit for json parsing if faceDescriptor arrays are large
