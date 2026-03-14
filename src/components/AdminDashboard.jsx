@@ -353,6 +353,44 @@ const injectStyles = () => {
     .adash ::-webkit-scrollbar { width: 5px; height: 5px; }
     .adash ::-webkit-scrollbar-track { background: rgba(147,210,255,0.15); border-radius: 99px; }
     .adash ::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.40); border-radius: 99px; }
+
+    /* ── Dark Mode Overrides ── */
+    html.dark .adash { background: linear-gradient(160deg, #020617 0%, #0f172a 40%, #1e293b 100%); color: #f8fafc; }
+    html.dark .adash::before {
+      background:
+        radial-gradient(ellipse 60% 50% at 10% 10%, rgba(14,165,233,0.15) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 90% 80%, rgba(56,189,248,0.15) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 30% at 60% 30%, rgba(99,102,241,0.1) 0%, transparent 55%);
+    }
+    html.dark .adash h1, html.dark .adash h2, html.dark .adash h3, html.dark .adash div { color: #f8fafc; }
+    html.dark .adash p, html.dark .adash span { color: #cbd5e1; }
+    
+    html.dark .ad-badge-wrap { background: rgba(15,23,42,0.6); border-color: rgba(56,189,248,0.3); }
+    html.dark .ad-glass { background: rgba(30,41,59,0.7); border-color: rgba(56,189,248,0.2); box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 4px 24px rgba(0,0,0,0.3); }
+    html.dark .ad-glass:hover { border-color: rgba(56,189,248,0.5); }
+    html.dark .ad-announce { background: rgba(15,23,42,0.8); border-color: rgba(56,189,248,0.3); }
+    
+    html.dark .ad-input, html.dark .ad-select { background: rgba(15,23,42,0.8); border-color: rgba(56,189,248,0.3); color: #f8fafc; }
+    html.dark .ad-input:focus, html.dark .ad-select:focus { background: rgba(30,41,59,0.9); }
+    html.dark .ad-input::placeholder { color: #64748b; }
+    
+    html.dark .ad-tabs { background: rgba(30,41,59,0.7); border-color: rgba(56,189,248,0.2); }
+    html.dark .ad-tab { color: #94a3b8; }
+    html.dark .ad-tab:hover { color: #e2e8f0; background: rgba(14,165,233,0.15); }
+    html.dark .ad-tab-active { color: #fff !important; }
+    
+    html.dark .ad-btn-refresh { background: rgba(14,165,233,0.15); border-color: rgba(14,165,233,0.3); color: #bae6fd; }
+    html.dark .ad-btn-refresh:hover { background: rgba(14,165,233,0.3); color: #38bdf8; }
+    
+    html.dark .ad-label { color: #bae6fd !important; }
+    html.dark .ad-helper { color: #94a3b8 !important; }
+    html.dark .ad-empty { background: rgba(30,41,59,0.5); border-color: rgba(56,189,248,0.3); color: #94a3b8; }
+    
+    html.dark .ad-card-sep { border-color: rgba(56,189,248,0.2); }
+
+    /* Override inline styles for specific elements */
+    html.dark .ad-glass h3 { color: #f8fafc !important; }
+    html.dark .ad-glass p { color: #cbd5e1 !important; }
   `;
     document.head.appendChild(tag);
 };

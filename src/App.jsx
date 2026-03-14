@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { ethers } from 'ethers';
-import { Vote, Wallet, LogOut, CheckCircle, AlertCircle, Bell, X, User, Shield, Home } from 'lucide-react';
+import { Vote, Wallet, LogOut, CheckCircle, AlertCircle, Bell, X, User, Shield, Home, Sun, Moon } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE } from './config';
 import { CONTRACT_ABI } from './utils/ABI';
@@ -15,6 +15,7 @@ const CONTRACT_ADDRESS = "0x4b63fb6f07080caE94e4751DCB90c22F25d1bAe2";
 // --- Contexts ---
 const RouterContext = createContext();
 const Web3Context = createContext();
+const ThemeContext = createContext();
 
 /* ─── Injected Global Styles ─────────────────────────────────────────────── */
 const injectAppStyles = () => {
@@ -351,6 +352,67 @@ const injectAppStyles = () => {
 
     /* selection */
     ::selection { background:rgba(56,189,248,0.28); color:#0c2340; }
+
+    /* ── Dark Mode Overrides ── */
+    html.dark body {
+      background: linear-gradient(160deg, #020617 0%, #0f172a 45%, #1e293b 100%);
+      color: #f8fafc;
+    }
+    html.dark body::before {
+      background:
+        radial-gradient(ellipse 55% 45% at 5%  5%,  rgba(14,165,233,0.15) 0%, transparent 60%),
+        radial-gradient(ellipse 45% 38% at 95% 85%, rgba(56,189,248,0.15) 0%, transparent 60%),
+        radial-gradient(ellipse 35% 28% at 55% 25%, rgba(99,102,241,0.1) 0%, transparent 55%);
+    }
+
+    html.dark .app-navbar {
+      background: rgba(15,23,42,0.85);
+      border-bottom: 1px solid rgba(56,189,248,0.2);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 4px 20px rgba(0,0,0,0.5);
+    }
+    html.dark .app-logo-text { color: #f8fafc; }
+    html.dark .app-nav-link-admin, html.dark .app-nav-link-voter { color: #e2e8f0; }
+    html.dark .app-nav-link-admin { background: rgba(124,58,237,0.2); border-color: rgba(124,58,237,0.4); }
+    html.dark .app-nav-link-voter { background: rgba(14,165,233,0.2); border-color: rgba(14,165,233,0.4); }
+    html.dark .app-bell { background: rgba(14,165,233,0.15); border-color: rgba(56,189,248,0.3); color: #bae6fd; }
+    html.dark .app-bell:hover { background: rgba(14,165,233,0.3); color: #38bdf8; }
+    html.dark .app-account-pill {
+      background: rgba(30,41,59,0.8);
+      border-color: rgba(56,189,248,0.3);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    html.dark .app-account-name { color: #f8fafc; border-right-color: rgba(56,189,248,0.3); }
+    html.dark .app-account-addr { color: #bae6fd; }
+    html.dark .app-disconnect { color: #cbd5e1; }
+    html.dark .app-disconnect:hover { color: #ef4444; background: rgba(239,68,68,0.2); }
+
+    html.dark .app-hero-h1 { color: #f8fafc; }
+    html.dark .app-hero-sub { color: #94a3b8; }
+    html.dark .app-feature-card {
+      background: rgba(30,41,59,0.7);
+      border-color: rgba(56,189,248,0.2);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 4px 20px rgba(0,0,0,0.3);
+    }
+    html.dark .app-feature-card:hover {
+      border-color: rgba(56,189,248,0.5);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.1) inset, 0 10px 36px rgba(0,0,0,0.5);
+    }
+    html.dark .app-feature-title { color: #f8fafc; }
+    html.dark .app-feature-desc { color: #cbd5e1; }
+
+    html.dark .app-offline-card {
+      background: rgba(30,41,59,0.85);
+      border-color: rgba(234,88,12,0.4);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 8px 40px rgba(0,0,0,0.5);
+    }
+    html.dark .app-offline-title { color: #fdba74; }
+    html.dark .app-offline-desc { color: #cbd5e1; }
+    html.dark .app-offline-code {
+      background: rgba(15,23,42,0.8);
+      border-color: rgba(14,165,233,0.3);
+      color: #7dd3fc;
+    }
+
   `;
   document.head.appendChild(tag);
 };
@@ -383,6 +445,19 @@ const Web3Provider = ({ children }) => {
     return saved ? JSON.parse(saved) : [];
   });
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
   useEffect(() => {
     localStorage.setItem('notification_history', JSON.stringify(history));
@@ -461,7 +536,7 @@ const Web3Provider = ({ children }) => {
       notifications: toasts,
       history, isPanelOpen, togglePanel,
       addNotification, markAsRead, markAllAsRead, removeNotification, clearHistory,
-      loading, ethers, backendOnline
+      loading, ethers, backendOnline, theme, toggleTheme
     }}>
       {children}
     </Web3Context.Provider>
@@ -472,7 +547,7 @@ export const useWeb3 = () => useContext(Web3Context);
 
 // --- Navbar ---
 const Navbar = () => {
-  const { account, isConnected, isFaceVerified, isAdmin, userProfile, connectWallet, disconnectWallet, history, togglePanel, loading } = useWeb3();
+  const { account, isConnected, isFaceVerified, isAdmin, userProfile, connectWallet, disconnectWallet, history, togglePanel, loading, theme, toggleTheme } = useWeb3();
   const { navigate } = useRouter();
 
   return (
@@ -502,6 +577,11 @@ const Navbar = () => {
                   </button>
                 )
               )}
+
+              {/* Theme Toggle */}
+              <button className="app-bell" onClick={toggleTheme} title="Toggle Theme">
+                {theme === 'dark' ? <Sun style={{ width: 17, height: 17 }} /> : <Moon style={{ width: 17, height: 17 }} />}
+              </button>
 
               {/* Bell */}
               <button className="app-bell" onClick={togglePanel} title="Notifications">

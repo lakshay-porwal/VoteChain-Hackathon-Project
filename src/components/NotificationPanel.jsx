@@ -228,6 +228,33 @@ const injectStyles = () => {
       border-color: rgba(14,165,233,.25);
       color: #0ea5e9;
     }
+
+    /* ── Dark Mode Overrides ── */
+    html.dark .np-backdrop { background: rgba(2,6,23,0.6); }
+    html.dark .np-panel { background: linear-gradient(170deg, #0f172a 0%, #1e293b 100%); border-left-color: rgba(56,189,248,0.2); box-shadow: -8px 0 40px rgba(0,0,0,0.5), -1px 0 0 rgba(255,255,255,0.05) inset; }
+    html.dark .np-header { background: rgba(15,23,42,0.8); border-bottom-color: rgba(56,189,248,0.2); }
+    html.dark .np-header-title { color: #f8fafc; }
+    html.dark .np-close-btn { background: rgba(14,165,233,0.15); border-color: rgba(14,165,233,0.3); color: #bae6fd; }
+    html.dark .np-close-btn:hover { background: rgba(239,68,68,0.2); color: #f87171; border-color: rgba(239,68,68,0.4); }
+    html.dark .np-actions { background: rgba(30,41,59,0.5); border-bottom-color: rgba(56,189,248,0.2); }
+    html.dark .np-btn-read { background: rgba(14,165,233,0.15); border-color: rgba(14,165,233,0.3); color: #7dd3fc; }
+    html.dark .np-btn-read:hover { background: rgba(14,165,233,0.25); border-color: rgba(14,165,233,0.5); }
+    html.dark .np-btn-clear { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); color: #fca5a5; }
+    html.dark .np-btn-clear:hover { background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.5); }
+    
+    html.dark .np-list::-webkit-scrollbar-track { background: rgba(56,189,248,0.1); }
+    html.dark .np-list::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.3); }
+    html.dark .np-empty p { color: #94a3b8; }
+    html.dark .np-empty-icon { background: rgba(56,189,248,0.1); border-color: rgba(56,189,248,0.2); }
+    
+    html.dark .np-item-read { background: rgba(30,41,59,0.5); border-color: rgba(56,189,248,0.1); }
+    html.dark .np-item-unread { background: rgba(30,41,59,0.9); border-color: rgba(56,189,248,0.3); box-shadow: 0 2px 12px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.05) inset; }
+    html.dark .np-item-unread:hover { border-color: rgba(56,189,248,0.5); box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.05) inset; }
+    html.dark .np-msg-read { color: #94a3b8; }
+    html.dark .np-msg-unread { color: #f8fafc; }
+    html.dark .np-item-time { color: #64748b; }
+    html.dark .np-action-remove { color: #64748b; }
+    html.dark .np-action-read { color: #64748b; }
   `;
     document.head.appendChild(tag);
 };

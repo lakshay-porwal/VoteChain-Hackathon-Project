@@ -180,6 +180,35 @@ const injectStyles = () => {
       transition:color .2s, background .2s;
     }
     .fa-back-link:hover { color:#0ea5e9; background:rgba(14,165,233,.08); }
+
+    /* ── Dark Mode Overrides ── */
+    html.dark .fa-wrap {
+      background: rgba(30,41,59,0.85);
+      border-color: rgba(56,189,248,0.3);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 8px 40px rgba(0,0,0,0.5);
+    }
+    html.dark .fa-title { color: #f8fafc; }
+    html.dark .fa-subtitle { color: #cbd5e1; }
+    html.dark .fa-label { color: #bae6fd; }
+    
+    html.dark .fa-input {
+      background: rgba(15,23,42,0.8);
+      border-color: rgba(56,189,248,0.3);
+      color: #f8fafc;
+    }
+    html.dark .fa-input:focus { background: rgba(30,41,59,0.9); }
+    html.dark .fa-input::placeholder { color: #64748b; }
+    html.dark .fa-input-icon { color: #7dd3fc; }
+    
+    html.dark .fa-camera-ring {
+      background: linear-gradient(135deg, rgba(15,23,42,0.9), rgba(30,41,59,0.9));
+      border-color: rgba(56,189,248,0.3);
+      box-shadow: 0 4px 28px rgba(0,0,0,0.4);
+    }
+    html.dark .fa-camera-loader, html.dark .fa-scan-overlay span { color: #bae6fd; }
+    html.dark .fa-scan-overlay { background: rgba(15,23,42,0.4); }
+    html.dark .fa-back-link { color: #94a3b8; }
+    html.dark .fa-back-link:hover { color: #e2e8f0; background: rgba(56,189,248,0.15); }
   `;
     document.head.appendChild(tag);
 };

@@ -308,6 +308,59 @@ const injectStyles = () => {
 
     /* "Hidden until end" text */
     .vd-hidden-label { color:#7ab8d8; font-style:italic; font-size:.8rem; }
+
+    /* ── Dark Mode Overrides ── */
+    html.dark .vdash { background: linear-gradient(160deg, #020617 0%, #0f172a 45%, #1e293b 100%); }
+    html.dark .vdash::before {
+      background:
+        radial-gradient(ellipse 55% 45% at 5%  5%,  rgba(14,165,233,0.15) 0%, transparent 60%),
+        radial-gradient(ellipse 45% 38% at 95% 85%, rgba(56,189,248,0.15) 0%, transparent 60%),
+        radial-gradient(ellipse 35% 28% at 55% 25%, rgba(99,102,241,0.1) 0%, transparent 55%);
+    }
+    html.dark .vdash h1, html.dark .vdash h2, html.dark .vdash h3, html.dark .vdash div { color: #f8fafc; }
+    html.dark .vdash p, html.dark .vdash span { color: #cbd5e1; }
+    html.dark .vd-btn-refresh { background: rgba(14,165,233,0.15); border-color: rgba(14,165,233,0.3); color: #bae6fd; }
+    html.dark .vd-btn-refresh:hover { background: rgba(14,165,233,0.3); color: #38bdf8; }
+    
+    html.dark .vd-announce {
+      background: rgba(15,23,42,0.8);
+      border-color: rgba(56,189,248,0.3);
+      box-shadow: 0 4px 28px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.05) inset;
+    }
+    html.dark .vd-announce-row:hover { background: rgba(14,165,233,0.15); }
+    html.dark .vd-announce-row span { color: #e2e8f0 !important; }
+    html.dark .vd-announce-row span:last-child { color: #94a3b8 !important; }
+    
+    html.dark .vd-tabs { background: rgba(30,41,59,0.7); border-color: rgba(56,189,248,0.2); }
+    html.dark .vd-tab { color: #94a3b8; }
+    html.dark .vd-tab:hover { color: #e2e8f0; background: rgba(14,165,233,0.15); }
+    html.dark .vd-tab-active { color: #fff !important; }
+    
+    html.dark .vd-card {
+      background: rgba(30,41,59,0.7);
+      border-color: rgba(56,189,248,0.2);
+    }
+    html.dark .vd-card:hover { border-color: rgba(56,189,248,0.5); }
+    html.dark .vd-meta-label { color: #94a3b8 !important; }
+    html.dark .vd-meta-value { color: #e2e8f0 !important; }
+    html.dark .vd-empty { background: rgba(30,41,59,0.5); border-color: rgba(56,189,248,0.3); color: #94a3b8; }
+    
+    html.dark .vd-modal { background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%); border-color: rgba(56,189,248,0.3); }
+    html.dark .vd-modal-header { background: rgba(15,23,42,0.9); border-bottom-color: rgba(56,189,248,0.2); }
+    html.dark .vd-modal-close { background: rgba(14,165,233,0.15); border-color: rgba(14,165,233,0.3); color: #bae6fd; }
+    html.dark .vd-candidate { background: rgba(30,41,59,0.8); border-color: rgba(56,189,248,0.2); }
+    html.dark .vd-count-box { background: rgba(15,23,42,0.8); border-color: rgba(56,189,248,0.3); }
+    html.dark .vd-winner { background: rgba(6,78,59,0.4); border-color: rgba(16,185,129,0.4); }
+
+    /* Override inline styles for specific elements */
+    html.dark .vd-card h3 { color: #f8fafc !important; }
+    html.dark .vd-card p { color: #cbd5e1 !important; }
+    html.dark .vd-modal-header h2 { color: #f8fafc !important; }
+    html.dark .vd-modal-header p { color: #94a3b8 !important; }
+    html.dark .vd-candidate div { color: #f8fafc !important; }
+    html.dark .vd-count-box div { color: #f8fafc !important; }
+    html.dark .vd-winner div { color: #f8fafc !important; }
+
   `;
     document.head.appendChild(tag);
 };

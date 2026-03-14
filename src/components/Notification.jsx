@@ -121,6 +121,18 @@ const injectStyles = () => {
     .nt-bar-error   { background: linear-gradient(90deg,#ef4444,#f87171); }
     .nt-bar-warning { background: linear-gradient(90deg,#f59e0b,#fcd34d); }
     .nt-bar-info    { background: linear-gradient(90deg,#0ea5e9,#38bdf8); }
+
+    /* ── Dark Mode Overrides ── */
+    html.dark .nt-toast { background: rgba(15,23,42,0.95); box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 6px 24px rgba(0,0,0,0.5); }
+    html.dark .nt-success { border-color: rgba(16,185,129,0.3); }
+    html.dark .nt-error { border-color: rgba(239,68,68,0.3); }
+    html.dark .nt-warning { border-color: rgba(245,158,11,0.3); }
+    html.dark .nt-info { border-color: rgba(14,165,233,0.3); }
+    
+    html.dark .nt-msg-success { color: #34d399; }
+    html.dark .nt-msg-error { color: #f87171; }
+    html.dark .nt-msg-warning { color: #fbbf24; }
+    html.dark .nt-msg-info { color: #7dd3fc; }
   `;
     document.head.appendChild(tag);
 };
