@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import * as faceapi from 'face-api.js';
 import { Camera, Loader2, User, Mail, Hash } from 'lucide-react';
 import axios from 'axios';
+import { API_BASE } from '../config';
 
 const FaceAuth = ({ account, isRegistration, onVerified, addNotification }) => {
     const videoRef = useRef(null);
@@ -111,8 +112,8 @@ const FaceAuth = ({ account, isRegistration, onVerified, addNotification }) => {
             const descriptorArr = Array.from(detection.descriptor);
 
             if (isRegistration) {
-                // Register new user — relative path goes through Vite proxy → http://localhost:5000
-                const res = await axios.post('/api/auth/register', {
+                // Register new user — uses API_BASE (absolute in prod, empty in dev via Vite proxy)
+                const res = await axios.post(`${API_BASE}/api/auth/register`, {
                     walletAddress: account,
                     name: formData.name,
                     email: formData.email,
@@ -127,7 +128,7 @@ const FaceAuth = ({ account, isRegistration, onVerified, addNotification }) => {
                 }
             } else {
                 // Verify returning user
-                const res = await axios.post('/api/auth/verify', {
+                const res = await axios.post(`${API_BASE}/api/auth/verify`, {
                     walletAddress: account,
                     loginDescriptor: descriptorArr,
                 });

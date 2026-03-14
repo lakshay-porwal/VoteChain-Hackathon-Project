@@ -2,6 +2,7 @@ import React, { useState, useEffect, createContext, useContext, useCallback } fr
 import { ethers } from 'ethers';
 import { Vote, Wallet, LogOut, CheckCircle, AlertCircle, Bell, X, User, Shield, Home } from 'lucide-react';
 import axios from 'axios';
+import { API_BASE } from './config';
 import { CONTRACT_ABI } from './utils/ABI';
 import AdminDashboard from './components/AdminDashboard';
 import VoterDashboard from './components/VoterDashboard';
@@ -108,8 +109,8 @@ const Web3Provider = ({ children }) => {
 
       // Check backend for user registration status
       try {
-        // Use relative path – proxied through Vite (/api/* → http://localhost:5000)
-        const res = await axios.get(`/api/users/${acc}`);
+        // In dev: relative path (Vite proxy). In prod: absolute Render URL via API_BASE.
+        const res = await axios.get(`${API_BASE}/api/users/${acc}`);
         if (res.data.success) {
           setIsRegistered(true);
           setUserProfile(res.data.user);
