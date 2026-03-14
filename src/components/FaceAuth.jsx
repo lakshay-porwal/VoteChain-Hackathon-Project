@@ -4,42 +4,214 @@ import { Camera, Loader2, User, Mail, Hash } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE } from '../config';
 
+/* ─── Injected Styles ────────────────────────────────────────────────────── */
+const injectStyles = () => {
+    if (document.getElementById('faceauth-styles')) return;
+    const tag = document.createElement('style');
+    tag.id = 'faceauth-styles';
+    tag.textContent = `
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    /* ── Keyframes ── */
+    @keyframes faFadeUp {
+      from { opacity:0; transform:translateY(22px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    @keyframes faSpin     { to { transform:rotate(360deg); } }
+    @keyframes faShimmer  {
+      0%   { background-position:-200% center; }
+      100% { background-position: 200% center; }
+    }
+    @keyframes faScanLine {
+      0%   { top: 0%; }
+      50%  { top: 90%; }
+      100% { top: 0%; }
+    }
+    @keyframes faRingPulse {
+      0%,100% { box-shadow: 0 0 0 0  rgba(56,189,248,.40); }
+      50%      { box-shadow: 0 0 0 10px rgba(56,189,248,.00); }
+    }
+    @keyframes faCornerBlink {
+      0%,100% { opacity:1; }
+      50%      { opacity:.35; }
+    }
+
+    .fa-fade-up { animation: faFadeUp .5s cubic-bezier(.22,.68,0,1.15) both; }
+    .fa-d1 { animation-delay:.06s; }
+    .fa-d2 { animation-delay:.12s; }
+    .fa-spin { animation: faSpin .9s linear infinite; }
+
+    /* ── Outer wrapper ── */
+    .fa-wrap {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: rgba(255,255,255,0.78);
+      border: 1px solid rgba(147,210,255,0.50);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border-radius: 1.5rem;
+      padding: 2.25rem 2rem;
+      width: 100%; max-width: 420px;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,.95) inset,
+        0 8px 40px rgba(14,165,233,.13),
+        0 2px 8px rgba(14,165,233,.07);
+      display: flex; flex-direction: column; align-items: center;
+    }
+
+    /* ── Title ── */
+    .fa-title {
+      font-size: 1.5rem; font-weight: 800; color: #0c2340;
+      letter-spacing: -.02em; margin: 0 0 .4rem; text-align: center;
+    }
+    .fa-subtitle {
+      font-size: .85rem; color: #5ba8cc; text-align: center;
+      line-height: 1.6; margin: 0 0 1.75rem;
+    }
+
+    /* ── Form ── */
+    .fa-form { width: 100%; display: flex; flex-direction: column; gap: .95rem; }
+
+    .fa-label {
+      display: block; font-size: .8rem; font-weight: 700;
+      color: #3a7fa8; margin-bottom: .35rem; letter-spacing: .01em;
+    }
+
+    .fa-input-wrap { position: relative; }
+    .fa-input-icon {
+      position: absolute; left: .85rem; top: 50%; transform: translateY(-50%);
+      color: #93c4e0; pointer-events: none;
+      display: flex; align-items: center;
+    }
+    .fa-input {
+      width: 100%; background: rgba(255,255,255,.88);
+      border: 1.5px solid rgba(147,210,255,.52);
+      border-radius: .65rem; padding: .65rem 1rem .65rem 2.5rem;
+      font-size: .875rem; color: #0c2340;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      outline: none; box-sizing: border-box;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+    .fa-input::placeholder { color: #93c4e0; }
+    .fa-input:focus {
+      background: #fff;
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56,189,248,.18);
+    }
+
+    /* ── Primary button ── */
+    .fa-btn-primary {
+      width: 100%; margin-top: .5rem;
+      padding: .8rem 1.5rem; border-radius: .8rem;
+      background: linear-gradient(135deg,#0ea5e9 0%,#38bdf8 55%,#0284c7 100%);
+      background-size: 200% 200%; background-position: 0% 50%;
+      border: none; color: #fff;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: .925rem; font-weight: 800; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: .5rem;
+      box-shadow: 0 4px 16px rgba(14,165,233,.38), 0 1px 0 rgba(255,255,255,.22) inset;
+      transition: background-position .4s, box-shadow .25s, transform .18s;
+    }
+    .fa-btn-primary:hover {
+      background-position: 100% 50%;
+      box-shadow: 0 6px 26px rgba(14,165,233,.55), 0 1px 0 rgba(255,255,255,.22) inset;
+      transform: translateY(-1px);
+    }
+    .fa-btn-primary:disabled {
+      background: rgba(147,210,255,.30); border:1px solid rgba(147,210,255,.38);
+      color: #7ab8d8; cursor: not-allowed; box-shadow:none; transform:none;
+    }
+
+    /* ── Camera viewport ── */
+    .fa-camera-ring {
+      position: relative;
+      width: 272px; height: 272px;
+      border-radius: 1.1rem; overflow: hidden;
+      background: linear-gradient(135deg,#e0f2fe,#f0f9ff);
+      border: 2.5px solid rgba(56,189,248,.45);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 28px rgba(14,165,233,.18);
+      animation: faRingPulse 3s ease-in-out infinite;
+    }
+
+    /* Corner brackets */
+    .fa-corner {
+      position: absolute; width: 22px; height: 22px;
+      border-color: #0ea5e9; border-style: solid;
+      animation: faCornerBlink 2.2s ease-in-out infinite;
+    }
+    .fa-corner-tl { top:8px; left:8px;  border-width:3px 0 0 3px; border-radius:4px 0 0 0; }
+    .fa-corner-tr { top:8px; right:8px; border-width:3px 3px 0 0; border-radius:0 4px 0 0; }
+    .fa-corner-bl { bottom:8px; left:8px;  border-width:0 0 3px 3px; border-radius:0 0 0 4px; }
+    .fa-corner-br { bottom:8px; right:8px; border-width:0 3px 3px 0; border-radius:0 0 4px 0; }
+
+    /* Scan line */
+    .fa-scan-line {
+      position: absolute; left:0; right:0; height:2px;
+      background: linear-gradient(90deg,transparent,rgba(14,165,233,.80),transparent);
+      animation: faScanLine 2.2s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    /* Loading state inside camera */
+    .fa-camera-loader {
+      display:flex; flex-direction:column; align-items:center; gap:.65rem;
+      color:#5ba8cc;
+    }
+    .fa-camera-loader span { font-size:.82rem; font-weight:600; }
+
+    /* Scanning overlay */
+    .fa-scan-overlay {
+      position:absolute; inset:0;
+      background: rgba(14,165,233,.12);
+      backdrop-filter:blur(2px);
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.6rem;
+    }
+    .fa-scan-overlay span { font-size:.82rem; font-weight:700; color:#0369a1; }
+
+    /* video */
+    .fa-video { width:100%; height:100%; object-fit:cover; }
+
+    /* ── Back link ── */
+    .fa-back-link {
+      margin-top:1rem; font-size:.82rem; font-weight:600;
+      color:#7ab8d8; background:none; border:none; cursor:pointer;
+      font-family:inherit; padding:.3rem .5rem; border-radius:.4rem;
+      transition:color .2s, background .2s;
+    }
+    .fa-back-link:hover { color:#0ea5e9; background:rgba(14,165,233,.08); }
+  `;
+    document.head.appendChild(tag);
+};
+
 const FaceAuth = ({ account, isRegistration, onVerified, addNotification }) => {
-    const videoRef = useRef(null);
-    const streamRef = useRef(null);       // Use ref instead of state to avoid stale closure in stopVideo
-    const modelsLoadedRef = useRef(false); // Track if models already loaded
+    const videoRef   = useRef(null);
+    const streamRef  = useRef(null);
+    const modelsLoadedRef = useRef(false);
 
     const [isModelsLoaded, setIsModelsLoaded] = useState(false);
-    const [isScanning, setIsScanning] = useState(false);
+    const [isScanning,     setIsScanning]     = useState(false);
     const [step, setStep] = useState(isRegistration ? 'form' : 'scan');
 
-    // Sync step with isRegistration prop
-    useEffect(() => {
-        setStep(isRegistration ? 'form' : 'scan');
-    }, [isRegistration]);
-
-    // Registration Form State
     const [formData, setFormData] = useState({ name: '', email: '', voterId: '' });
 
-    // Stop camera
+    useEffect(() => { injectStyles(); }, []);
+    useEffect(() => { setStep(isRegistration ? 'form' : 'scan'); }, [isRegistration]);
+
+    // ── Camera helpers ──────────────────────────────────────────────────────
     const stopVideo = useCallback(() => {
         if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current.getTracks().forEach(t => t.stop());
             streamRef.current = null;
         }
     }, []);
 
-    // Start camera
     const startVideo = useCallback(() => {
-        // Prevent double-start
         if (streamRef.current) return;
-
-        navigator.mediaDevices.getUserMedia({ video: { width: 288, height: 288 } })
-            .then((currentStream) => {
-                streamRef.current = currentStream;
-                if (videoRef.current) {
-                    videoRef.current.srcObject = currentStream;
-                }
+        navigator.mediaDevices.getUserMedia({ video: { width: 272, height: 272 } })
+            .then((s) => {
+                streamRef.current = s;
+                if (videoRef.current) videoRef.current.srcObject = s;
             })
             .catch((err) => {
                 console.error('Camera error:', err);
@@ -47,11 +219,10 @@ const FaceAuth = ({ account, isRegistration, onVerified, addNotification }) => {
             });
     }, [addNotification]);
 
-    // Load face-api.js models ONCE on mount
+    // ── Load models ─────────────────────────────────────────────────────────
     useEffect(() => {
-        if (modelsLoadedRef.current) return; // Already loaded
-
-        const loadModels = async () => {
+        if (modelsLoadedRef.current) return;
+        const load = async () => {
             try {
                 await Promise.all([
                     faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
@@ -61,28 +232,20 @@ const FaceAuth = ({ account, isRegistration, onVerified, addNotification }) => {
                 modelsLoadedRef.current = true;
                 setIsModelsLoaded(true);
             } catch (error) {
-                console.error('Error loading face models:', error);
+                console.error('Model load error:', error);
                 addNotification('Failed to load face detection models. Try refreshing.', 'error');
             }
         };
-
-        loadModels();
-
-        // Stop camera on component unmount
+        load();
         return () => stopVideo();
     }, [addNotification, stopVideo]);
 
-    // Start video when models are ready AND step is 'scan'
     useEffect(() => {
-        if (isModelsLoaded && step === 'scan') {
-            startVideo();
-        }
-        // Stop video when going back to form
-        if (step === 'form') {
-            stopVideo();
-        }
+        if (isModelsLoaded && step === 'scan') startVideo();
+        if (step === 'form') stopVideo();
     }, [isModelsLoaded, step, startVideo, stopVideo]);
 
+    // ── Form submit ─────────────────────────────────────────────────────────
     const handleFormSubmit = (e) => {
         e.preventDefault();
         if (!formData.name || !formData.email || !formData.voterId) {
@@ -92,11 +255,11 @@ const FaceAuth = ({ account, isRegistration, onVerified, addNotification }) => {
         setStep('scan');
     };
 
+    // ── Scan ────────────────────────────────────────────────────────────────
     const handleScan = async () => {
         if (!isModelsLoaded || !videoRef.current) return;
         setIsScanning(true);
         addNotification('Scanning face, please hold still...', 'info');
-
         try {
             const detection = await faceapi
                 .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
@@ -112,67 +275,48 @@ const FaceAuth = ({ account, isRegistration, onVerified, addNotification }) => {
             const descriptorArr = Array.from(detection.descriptor);
 
             if (isRegistration) {
-                // Register new user — uses API_BASE (absolute in prod, empty in dev via Vite proxy)
                 const res = await axios.post(`${API_BASE}/api/auth/register`, {
-                    walletAddress: account,
-                    name: formData.name,
-                    email: formData.email,
-                    voterId: formData.voterId,
-                    faceDescriptor: descriptorArr,
+                    walletAddress: account, ...formData, faceDescriptor: descriptorArr,
                 });
-
                 if (res.data.success) {
                     addNotification('Registration successful! Welcome to VoteChain. 🎉', 'success');
-                    stopVideo();
-                    onVerified(res.data.user);
+                    stopVideo(); onVerified(res.data.user);
                 }
             } else {
-                // Verify returning user
                 const res = await axios.post(`${API_BASE}/api/auth/verify`, {
-                    walletAddress: account,
-                    loginDescriptor: descriptorArr,
+                    walletAddress: account, loginDescriptor: descriptorArr,
                 });
-
                 if (res.data.success) {
                     addNotification('Face verified! Welcome back. ✅', 'success');
-                    stopVideo();
-                    onVerified(res.data.user);
+                    stopVideo(); onVerified(res.data.user);
                 }
             }
         } catch (error) {
             console.error('Face auth error:', error);
             const msg = error.response?.data?.message || 'Authentication failed. Please try again.';
             addNotification(msg, 'error');
-
-            // Registration failed with a 400 (e.g. duplicate email) → go back to form
-            if (isRegistration && error.response?.status === 400) {
-                stopVideo();
-                setStep('form');
-            }
+            if (isRegistration && error.response?.status === 400) { stopVideo(); setStep('form'); }
         } finally {
             setIsScanning(false);
         }
     };
 
-    // ─── Registration Form ───────────────────────────────────────────────────
+    // ── Registration form ───────────────────────────────────────────────────
     if (step === 'form') {
         return (
-            <div className="flex flex-col items-center justify-center p-8 bg-gray-800/50 rounded-2xl border border-gray-700 backdrop-blur-md w-full max-w-md mx-auto mt-10">
-                <h2 className="text-2xl font-bold text-white mb-2">Voter Registration</h2>
-                <p className="text-gray-400 text-center text-sm mb-6">
-                    Enter your details to create your secure face ID.
-                </p>
+            <div className="fa-wrap fa-fade-up">
+                <h2 className="fa-title">Voter Registration</h2>
+                <p className="fa-subtitle">Enter your details to create your secure face ID.</p>
 
-                <form onSubmit={handleFormSubmit} className="w-full space-y-4">
+                <form className="fa-form" onSubmit={handleFormSubmit}>
                     {/* Full Name */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-1">Full Name</label>
-                        <div className="relative">
-                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <label className="fa-label">Full Name</label>
+                        <div className="fa-input-wrap">
+                            <span className="fa-input-icon"><User style={{ width:15, height:15 }} /></span>
                             <input
-                                type="text"
-                                required
-                                className="w-full bg-gray-900 border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                                type="text" required
+                                className="fa-input"
                                 placeholder="John Doe"
                                 value={formData.name}
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
@@ -182,13 +326,12 @@ const FaceAuth = ({ account, isRegistration, onVerified, addNotification }) => {
 
                     {/* Email */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-1">Email Address</label>
-                        <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <label className="fa-label">Email Address</label>
+                        <div className="fa-input-wrap">
+                            <span className="fa-input-icon"><Mail style={{ width:15, height:15 }} /></span>
                             <input
-                                type="email"
-                                required
-                                className="w-full bg-gray-900 border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                                type="email" required
+                                className="fa-input"
                                 placeholder="john@example.com"
                                 value={formData.email}
                                 onChange={e => setFormData({ ...formData, email: e.target.value })}
@@ -198,25 +341,22 @@ const FaceAuth = ({ account, isRegistration, onVerified, addNotification }) => {
 
                     {/* Voter ID */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-1">Voter ID Card Number</label>
-                        <div className="relative">
-                            <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <label className="fa-label">Voter ID Card Number</label>
+                        <div className="fa-input-wrap">
+                            <span className="fa-input-icon"><Hash style={{ width:15, height:15 }} /></span>
                             <input
-                                type="text"
-                                required
-                                className="w-full bg-gray-900 border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                                type="text" required
+                                className="fa-input"
                                 placeholder="ABC1234567"
+                                style={{ fontFamily: "'JetBrains Mono', monospace" }}
                                 value={formData.voterId}
                                 onChange={e => setFormData({ ...formData, voterId: e.target.value })}
                             />
                         </div>
                     </div>
 
-                    <button
-                        type="submit"
-                        className="w-full mt-6 py-3 px-6 rounded-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:opacity-90 transition-all flex justify-center items-center gap-2 shadow-lg shadow-blue-500/20"
-                    >
-                        <Camera className="w-4 h-4" />
+                    <button type="submit" className="fa-btn-primary">
+                        <Camera style={{ width:16, height:16 }} />
                         Proceed to Face Scan
                     </button>
                 </form>
@@ -224,66 +364,70 @@ const FaceAuth = ({ account, isRegistration, onVerified, addNotification }) => {
         );
     }
 
-    // ─── Face Scan Screen ────────────────────────────────────────────────────
+    // ── Face scan screen ────────────────────────────────────────────────────
     return (
-        <div className="flex flex-col items-center justify-center p-8 bg-gray-800/50 rounded-2xl border border-gray-700 backdrop-blur-md max-w-md mx-auto mt-10">
-            <h2 className="text-2xl font-bold text-white mb-2">
+        <div className="fa-wrap fa-fade-up">
+            <h2 className="fa-title">
                 {isRegistration ? 'Register Your Face' : 'Verify Your Identity'}
             </h2>
-            <p className="text-gray-400 text-center text-sm mb-6">
+            <p className="fa-subtitle">
                 {isRegistration
                     ? 'Look directly at the camera to set up your secure face ID.'
                     : 'Look at the camera to verify your identity before accessing the dashboard.'}
             </p>
 
-            {/* Camera Preview */}
-            <div className="relative rounded-xl overflow-hidden bg-black w-72 h-72 border-4 border-blue-500/30 flex items-center justify-center mb-6 shadow-2xl shadow-blue-900/20">
+            {/* Camera viewport */}
+            <div className="fa-camera-ring">
+                {/* Corner brackets */}
+                <span className="fa-corner fa-corner-tl" />
+                <span className="fa-corner fa-corner-tr" />
+                <span className="fa-corner fa-corner-bl" />
+                <span className="fa-corner fa-corner-br" />
+
                 {!isModelsLoaded ? (
-                    <div className="flex flex-col items-center text-blue-400 gap-2">
-                        <Loader2 className="w-8 h-8 animate-spin" />
-                        <span className="text-sm font-medium">Loading AI Models...</span>
+                    <div className="fa-camera-loader">
+                        <Loader2 style={{ width:32, height:32 }} className="fa-spin" />
+                        <span>Loading AI Models…</span>
                     </div>
                 ) : (
-                    <video
-                        ref={videoRef}
-                        autoPlay
-                        muted
-                        playsInline
-                        className="w-full h-full object-cover"
-                    />
+                    <>
+                        <video
+                            ref={videoRef}
+                            autoPlay muted playsInline
+                            className="fa-video"
+                        />
+                        {/* Animated scan line (idle) */}
+                        {!isScanning && <div className="fa-scan-line" />}
+                    </>
                 )}
+
                 {/* Scanning overlay */}
                 {isScanning && (
-                    <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
-                        <div className="flex flex-col items-center gap-2">
-                            <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
-                            <span className="text-sm text-white font-medium">Processing...</span>
-                        </div>
+                    <div className="fa-scan-overlay">
+                        <Loader2 style={{ width:36, height:36 }} className="fa-spin" />
+                        <span>Analyzing…</span>
                     </div>
                 )}
             </div>
 
-            {/* Scan Button */}
+            {/* Scan button */}
             <button
+                className="fa-btn-primary"
+                style={{ width: 272 }}
                 onClick={handleScan}
                 disabled={!isModelsLoaded || isScanning}
-                className={`w-full py-3 px-6 rounded-xl font-bold flex items-center justify-center gap-2 transition-all
-                    ${!isModelsLoaded || isScanning
-                        ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:opacity-90 shadow-lg shadow-blue-500/20'
-                    }`}
             >
                 {isScanning ? (
-                    <><Loader2 className="w-5 h-5 animate-spin" /> Analyzing Face...</>
+                    <><Loader2 style={{ width:17, height:17 }} className="fa-spin" /> Analyzing Face…</>
                 ) : (
-                    <><Camera className="w-5 h-5" /> Scan Face for {isRegistration ? 'Registration' : 'Login'}</>
+                    <><Camera style={{ width:17, height:17 }} /> Scan Face for {isRegistration ? 'Registration' : 'Login'}</>
                 )}
             </button>
 
             {isRegistration && (
                 <button
+                    className="fa-back-link"
                     onClick={() => { stopVideo(); setStep('form'); }}
-                    className="mt-4 text-sm text-gray-400 hover:text-white transition-colors"
                 >
                     ← Back to Details Form
                 </button>
