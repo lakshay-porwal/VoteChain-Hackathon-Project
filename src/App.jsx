@@ -10,7 +10,7 @@ import Notification from './components/Notification';
 import NotificationPanel from './components/NotificationPanel';
 import FaceAuth from './components/FaceAuth';
 
-const CONTRACT_ADDRESS = "0x4b63fb6f07080caE94e4751DCB90c22F25d1bAe2";
+const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0x4b63fb6f07080caE94e4751DCB90c22F25d1bAe2";
 
 // --- Contexts ---
 const RouterContext = createContext();
@@ -483,7 +483,7 @@ const Web3Provider = ({ children }) => {
   };
 
   const connectWallet = async () => {
-    if (!window.ethereum) { addNotification("MetaMask not found!", "error"); return; }
+    if (!window.ethereum) { addNotification("MetaMask not found! Please install MetaMask to use this application.", "error"); return; }
     try {
       setLoading(true);
       const provider = new ethers.BrowserProvider(window.ethereum);
